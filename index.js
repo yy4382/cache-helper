@@ -15,7 +15,7 @@ async function directRefetch(key, url, expireInfoKey) {
   const expireInfo = JSON.parse(cacheExpireInfo);
   const item = expireInfo.find((item) => item.key === key);
   item.update = new Date().toISOString();
-  $persistentStore.write(JSON.stringify(expireInfo), this.expireInfoKey);
+  $persistentStore.write(JSON.stringify(expireInfo), expireInfoKey);
   return data;
 }
 
@@ -33,26 +33,30 @@ export default async function cache_read(
 ) {
   let cacheExpireInfo = $persistentStore.read(expireInfoKey);
   if (!cacheExpireInfo) {
+    console.log("Cache info store not found, creating new one.");
     const data = await client_fetch(url);
     $persistentStore.write(data, key);
     cacheExpireInfo = [];
     cacheExpireInfo.push({ key, update: new Date().toISOString() });
-    $persistentStore.write(JSON.stringify(cacheExpireInfo), this.expireInfoKey);
+    $persistentStore.write(JSON.stringify(cacheExpireInfo), expireInfoKey);
     return data;
   }
   cacheExpireInfo = JSON.parse(cacheExpireInfo);
   const item = cacheExpireInfo.find((item) => item.key === key);
   if (!item) {
+    console.log("Cache info for this url not found, refetching.");
     const data = await client_fetch(url);
     $persistentStore.write(data, key);
     cacheExpireInfo.push({ key, update: new Date().toISOString() });
-    $persistentStore.write(JSON.stringify(cacheExpireInfo), this.expireInfoKey);
+    $persistentStore.write(JSON.stringify(cacheExpireInfo), expireInfoKey);
     return data;
   }
   if (maxAge === -1) {
+    console.log("maxAge = -1, always use cache.");
     return $persistentStore.read(key);
   }
   if (maxAge === 0) {
+    console.log("maxAge = 0, always refetch.");
     return await directRefetch(key, url, expireInfoKey);
   }
   const now = new Date();
