@@ -1,0 +1,20 @@
+{
+  "name": "persistent-store-cache-helper",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "README.md",
+    "package.json"
+  ],
+  "scripts": {
+    "build": "esbuild index.js --bundle --minify --outfile=index.min.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "esbuild": "^0.20.2"
+  }
+}
