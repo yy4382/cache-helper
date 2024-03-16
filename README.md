@@ -4,7 +4,13 @@
 
 ## 使用
 
-可以直接把 index.min.js 文件内容拷贝到脚本中，也可以通过 npm 安装（还没发布）。
+可以直接把 index.min.js 文件内容拷贝到脚本中，也可以通过 npm 安装。
+
+```bash
+npm i persistent-store-cache-helper
+
+pnpm add persistent-store-cache-helper
+```
 
 ```javascript
 import cache_read from "persistent-store-cache-helper";
