@@ -9,24 +9,13 @@ async function client_fetch(url) {
   });
 }
 async function directRefetch(key, url, expireInfoKey) {
-  let data = "";
-  data = await client_fetch(url);
+  const data = await client_fetch(url);
   $persistentStore.write(data, key);
   let cacheExpireInfo = $persistentStore.read(expireInfoKey);
-  if (!cacheExpireInfo) {
-    cacheExpireInfo = [];
-    cacheExpireInfo.push({ key, update: new Date().toISOString() });
-    $persistentStore.write(JSON.stringify(cacheExpireInfo), this.expireInfoKey);
-  } else {
-    const expireInfo = JSON.parse(cacheExpireInfo);
-    const item = expireInfo.find((item) => item.key === key);
-    if (!item) {
-      expireInfo.push({ key, update: new Date().toISOString() });
-    } else {
-      item.update = new Date().toISOString();
-    }
-    $persistentStore.write(JSON.stringify(expireInfo), this.expireInfoKey);
-  }
+  const expireInfo = JSON.parse(cacheExpireInfo);
+  const item = expireInfo.find((item) => item.key === key);
+  item.update = new Date().toISOString();
+  $persistentStore.write(JSON.stringify(expireInfo), this.expireInfoKey);
   return data;
 }
 
@@ -43,37 +32,28 @@ export default async function cache_read(
   expireInfoKey = "json.cacheHelper.expireInfo"
 ) {
   let cacheExpireInfo = $persistentStore.read(expireInfoKey);
+  if (!cacheExpireInfo) {
+    const data = await client_fetch(url);
+    $persistentStore.write(data, key);
+    cacheExpireInfo = [];
+    cacheExpireInfo.push({ key, update: new Date().toISOString() });
+    $persistentStore.write(JSON.stringify(cacheExpireInfo), this.expireInfoKey);
+    return data;
+  }
+  cacheExpireInfo = JSON.parse(cacheExpireInfo);
+  const item = cacheExpireInfo.find((item) => item.key === key);
+  if (!item) {
+    const data = await client_fetch(url);
+    $persistentStore.write(data, key);
+    cacheExpireInfo.push({ key, update: new Date().toISOString() });
+    $persistentStore.write(JSON.stringify(cacheExpireInfo), this.expireInfoKey);
+    return data;
+  }
   if (maxAge === -1) {
     return $persistentStore.read(key);
   }
   if (maxAge === 0) {
     return await directRefetch(key, url, expireInfoKey);
-  }
-  if (!cacheExpireInfo) {
-    const storage = $persistentStore.read(key);
-    if (storage) {
-      cacheExpireInfo = [];
-      cacheExpireInfo.push({ key, update: new Date().toISOString() });
-      $persistentStore.write(
-        JSON.stringify(cacheExpireInfo),
-        this.expireInfoKey
-      );
-      return storage;
-    } else {
-      return await directRefetch(key, url, expireInfoKey);
-    }
-  }
-  const expireInfo = JSON.parse(cacheExpireInfo);
-  const item = expireInfo.find((item) => item.key === key);
-  if (!item) {
-    const storage = $persistentStore.read(key);
-    if (storage) {
-      expireInfo.push({ key, update: new Date().toISOString() });
-      $persistentStore.write(JSON.stringify(expireInfo), this.expireInfoKey);
-      return storage;
-    } else {
-      return await directRefetch(key, url, expireInfoKey);
-    }
   }
   const now = new Date();
   const update = new Date(item.update);
