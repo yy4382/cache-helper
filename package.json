@@ -6,7 +6,7 @@
   "files": [
     "index.js",
     "README.md",
-    "package.json"
+    "index.d.ts"
   ],
   "scripts": {
     "build": "esbuild index.js --bundle --minify --outfile=index.min.js"
